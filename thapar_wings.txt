@@ -1,0 +1,582 @@
+import re
+import time
+import get_variable_name
+import selenium
+import sys
+from selenium.webdriver.common.by import By
+PATH="C:\Program Files (x86)\chromedriver.exe"
+from selenium import webdriver
+# setting webdriver option to initially convert all the pages to english
+options = webdriver.ChromeOptions()
+options.add_argument('--lang=es')
+driver = webdriver.Chrome(executable_path=PATH, chrome_options=options)
+
+sys.setrecursionlimit(15000)
+from bs4 import BeautifulSoup
+import nltk
+import pandas as pd
+
+nltk.download('wordnet')
+
+nltk.download('punkt')
+
+# making list for checking if the text has matching string
+ner1=["member","members","minister","ministers","ministries","directory","directories","council","a-z","government a-z",
+     "parliament","federal government","cabinet members","cabinet","board member","board members","contact directory",
+     "government leader","government leaders","senator","senators","representative","representatives","legislator",
+     "legislators","governor","mayor","state authorities","adminstrator","adminstrative","senators'","department",
+     "chancellery","ministry","member's","mla","mlas","mlcs","mla","mlc","lt. governor","governors","lt. governors",
+     "state","states","unions","agriculture","telecommunication","defence","armed","medical","hospitality","tourism",
+     "education","husbandry","security","development","urban","environment","housing","rural","art","commerce",
+     "finance","tax","power","transport","labour","sports","youth","health","family","law","infrastructure","science",
+     "rural","communication","communications","who","contact","municipal","website of"]
+ner=[]
+
+# generating synonyms using nltk wordnet library
+
+from nltk.corpus import wordnet
+for i in ner1:
+    for syn in wordnet.synsets(i):
+        for lemma in syn.lemmas():
+            ner.append(lemma.name())
+name_finder=["hon","honourable","mr","mrs","ms","shri","sri","smt.","dr","dr.","msc","mba","mag."
+             "sushri","his highness","his excellency","lieutenant","her excellency","lord","sh."]
+
+role_=["mp","mla","prime minister","minister of","commisioner","chairperson","president","vice","hon'ble"]
+
+ministry=["ministry of","department of"]
+#creating different list of variables
+name=[]
+role=[]
+position=[]
+
+
+allowed_domains=["https://www.india.gov.in/my-government","https://uaecabinet.ae/en",
+     "https://www.gov.za/","https://www.usa.gov/","https://www.australia.gov.au/","https://www.gov.uk/",
+     "https://www.gov.si/","https://www.canada.ca/en.html","https://www.government.se/",
+     "https://www.bundeskanzleramt.gv.at/en.html","https://www.gov.si/en/","https://www.govt.nz/",
+     "https://denmark.dk/",
+     "https://www.admin.ch/gov/en/start.html","https://www.regjeringen.no/en/id4/"]
+
+java=["javascript","javascript:;","javascript:void(0);"]
+print(ner)
+
+kamikaze=["member","members","minister","ministers","ministries","directory","directories","council","a-z","government a-z",
+          "parliament","federal government","cabinet members","cabinet","board member","board members","contact directory",
+          "government leader","government leaders","senator","senators","representative","representatives","legislator",
+          "legislators","governor","mayor","state authorities","adminstrator","adminstrative","senators'",
+          "mla","mlas","mlcs","mla","mlc","lt. governor","governors","lt. governors","who","contact","1","2","3","4","5","6","7"
+          "8","9","municipal","website of"]
+
+def country(x):
+    if(x=="https://www.india.gov.in/my-government"):
+        country="india"
+    elif(x=="https://uaecabinet.ae/en"):
+        country="uae"
+    elif(x=="https://www.gov.za/"):
+        country="south-africa"
+    elif(x=="https://www.usa.gov/"):
+        country="usa"
+    elif(x=="https://www.australia.gov.au/"):
+        country="australia"
+    elif(x=="https://www.gov.uk/"):
+        country="uk"
+    elif(x=="https://www.gov.si/"):
+        country="slovenia"
+    elif(x=="https://www.canada.ca/en.html"):
+        country="canada"
+    elif(x=="https://www.government.se/"):
+        country="sweden"
+    elif(x=="https://www.bundeskanzleramt.gv.at/en.html"):
+        country="austria"
+    elif(x=="https://www.gov.si/en/"):
+        country="singapore"
+    elif(x=="https://www.govt.nz/"):
+        country="new zeland"
+    elif(x=="https://denmark.dk/"):
+        country="denmark"
+    elif(x=="https://www.admin.ch/gov/en/start.html"):
+        country="switzerland"
+    elif(x=="https://www.regjeringen.no/en/id4/"):
+        country="norway"
+        
+        
+def extractor(x):
+    x=x.lower()
+    for i in name_finder:
+        if(bool(re.search(i,x))==True):
+            name.append(x)
+    for i in ministry:
+        if(bool(re.search(i,x))==True):
+            role.append(x)
+    for i in role_:
+        if(bool(re.search(i,x))==True):
+            position.append(x)
+            
+            
+def lowering_f(x):
+    x=x.lower()
+    return x
+
+def checker(x):
+    for i in ner:
+        if(re.search(i,x.lower())):
+            return True
+        
+def name_checker(x):
+    for i in name_finder:
+        if(bool(re.search(i,x.lower()))):
+            return True
+        
+new_list=[]
+def element_remover(list_name,index):
+    for i in range(len(list_name)):
+        if i!=index:
+            new_list.append(list_name[i])
+    list_name=list(new_list)
+    list_name=list_name[:]
+    new_list.clear()
+    return list_name
+
+def as_c(x):
+    for i in java:
+        if(re.search(i,x.lower())):
+            return True
+            
+#recursion last link end
+
+
+
+a=[]
+b=[]
+global cnt 
+global cnt2
+global cnt3
+global country
+cnt=0
+cnt2=0
+cnt3=0
+country_name=""
+country_list=[]
+def scrape(x):
+    global cnt 
+    global cnt2
+    global cnt3
+    global country
+    driver.get(x)
+    elems=driver.find_elements_by_tag_name('a')
+    for elem in elems:
+        href = elem.get_attribute('href')
+        if href is not None:
+            a.append(href)
+        text=elem.get_attribute('text')
+        if text is not None:
+            b.append(text)
+    #checking if text enclosed in a tag has anything in common with ner file
+    new_list1=[]   
+    count=0
+    a1=list(a)
+    a1=a[:]
+    b1=list(b)
+    b1=b[:]
+    b.clear()
+    a.clear()
+    for i in b1:
+        if(checker(i)):
+            b.append(i)
+            a.append(a1[count])
+        count+=1
+    #javascript false href fremover
+    count1=0
+    a2=list(a)
+    a2=a[:]
+    b2=list(b)
+    b2=b[:]
+    b.clear()
+    a.clear()
+    for i in a2:
+        if(as_c(i)):
+            count1=count1
+        else:
+            a.append(i)
+            b.append(b2[count1])
+        count1+=1
+        
+    # duplicate remover
+    dup_a=list(a)
+    dup_a=a[:]
+    dup_b=list(b)
+    dup_b=b[:]
+    a.clear()
+    b.clear()
+    count_x=0
+    for i in dup_a:
+        if i not in a:
+            a.append(i)
+            b.append(dup_b[count_x])
+            if(count_x>cnt2):
+                country_list.append(country_name)
+        count_x+=1
+    print(len(b))
+    cnt=cnt+1
+    
+    #level deciding
+    if(cnt==cnt2):
+        cnt2=len(a)
+        cnt3+=1
+    if(cnt3==15):
+        return 0
+    
+    scrape(a[cnt])
+    
+
+for al in allowed_domains:
+    country_name=country(al)
+    driver.get(al)
+    elems=driver.find_elements_by_tag_name('a')
+    for elem in elems:
+        href = elem.get_attribute('href')
+        if href is not None:
+            a.append(href)
+        text=elem.get_attribute('text')
+        if text is not None:
+            b.append(text)
+        
+
+    #ner checker
+    count=0
+    a1=list(a)
+    a1=a[:]
+    b1=list(b)
+    b1=b[:]
+    b.clear()
+    a.clear()
+    for i in b1:
+        if(checker(i)):
+            b.append(i)
+            a.append(a1[count])
+        count+=1
+    #javascript href remover
+    count1=0
+    a2=list(a)
+    a2=a[:]
+    b2=list(b)
+    b2=b[:]
+    b.clear()
+    a.clear()
+    for i in a2:
+        if(as_c(i)):
+            count1=count1
+        else:
+            a.append(i)
+            b.append(b2[count1])
+            if(count1>cnt2):
+                country_list.append(country_name)
+        count1+=1
+
+    print(b)
+
+    cnt=cnt+1
+    cnt2=len(a)
+    scrape(a[cnt])
+
+
+#now extracting even more probable places where we can found names
+print(len(b))
+extractor_a=[]
+extractor_b=[]
+b_tempz=[]
+a_tempz=[]
+a_tempz=list(a)
+a_tempz=a[:]
+b_tempz=list(b)
+b_tempz=b[:]
+a.clear()
+b.clear()
+country_list1=[]
+for i in range(len(b_tempz)):
+    for j in range(len(kamikaze)):
+        if(re.search(kamikaze[j],b_tempz[i].lower())):
+            b.append(b_tempz[i])
+            a.append(a_tempz[i])
+            continue
+            
+#removing those text elemnts whose charachter length is more than 35
+a_tempz=list(a)
+a_tempz=a[:]
+b_tempz=list(b)
+b_tempz=b[:]
+a.clear()
+b.clear()
+for i in range(len(b_tempz)):
+    if(len(b_tempz[i])<=35):
+        b.append(b_tempz[i])
+        a.append(a_tempz[i])
+        country_list1.append(country_list[i])
+print(b)
+
+field=[]
+country_field=[]
+#CHALLENGE 1
+#extracting li elements
+
+from bs4 import BeautifulSoup
+from selenium.webdriver.common.by import By
+PATH="C:\Program Files (x86)\chromedriver.exe"
+from selenium import webdriver
+options = webdriver.ChromeOptions()
+options.add_argument('--lang=es')
+driver = webdriver.Chrome(executable_path=PATH, chrome_options=options)
+tag=["a","img","button","video","link","form","label","input"]
+text=[]
+global count_1
+count_1=0
+
+for ix in a:
+    
+    driver.get(ix)
+    html_source = driver.page_source
+
+    #print(html_source)
+    soup = BeautifulSoup(html_source, 'html.parser')
+    print(len(soup.find_all("li")))
+    txt=soup.find_all("li")
+    for j in range(len(txt)):
+        count=0
+        for i in tag:
+            if bool(txt[j].find_all(i)):
+                count=1
+                continue
+        if count==0:
+            text.append(txt[j].string)
+            country_field.append(country_list1[count_1])
+    count_1+=1
+for i in text:
+    field.append(i)
+    print(i)
+
+#extracting table elements
+
+from bs4 import BeautifulSoup
+from selenium.webdriver.common.by import By
+PATH="C:\Program Files (x86)\chromedriver.exe"
+from selenium import webdriver
+options = webdriver.ChromeOptions()
+options.add_argument('--lang=es')
+driver = webdriver.Chrome(executable_path=PATH, chrome_options=options)
+field2=[]
+count_1=0
+#getting all the columns of a ow individually
+for ix in a:
+    driver.get(ix)
+    html_source = driver.page_source
+    td=[]
+    tr=[]
+    #print(html_source)
+    soup = BeautifulSoup(html_source, 'html.parser')
+    table=soup.find_all("table")
+    for i in range(len(table)):
+        tr=table[i].find_all("tr")
+    for i in range(len(tr)):
+        td=td+tr[i].find_all("td")
+        length=len(tr[i].find_all("td"))
+    for i in td:
+        i=str(i)
+        i=i[4:]
+        i=i[:-5]
+        field2.append(i)
+        country_field.append(country_list1[count_1])
+    count_1+=1
+
+#now connecting all the columns to make one row
+new_field=[]
+for i in field2:
+    data=""
+    #print(len(field))
+    if(len(field2)>0):
+        for i in range(length):
+            data=data+field2[i]+" "
+        new_field.append(data)
+        field2=field2[length:]
+        data=" "
+
+for i in field2:
+    field.append(i)
+    print(i)
+
+#extracting text-image
+
+from bs4 import BeautifulSoup
+from selenium.webdriver.common.by import By
+PATH="C:\Program Files (x86)\chromedriver.exe"
+from selenium import webdriver
+options = webdriver.ChromeOptions()
+options.add_argument('--lang=es')
+driver = webdriver.Chrome(executable_path=PATH, chrome_options=options)
+field1=[]
+count_1=0
+for ix in a:
+    
+    
+    driver.get(ix)
+    html_source = driver.page_source
+    soup = BeautifulSoup(html_source, 'html.parser')
+
+
+    div=soup.find_all("div")
+    count=0
+    field=[]
+    for i in range(len(div)):
+        data=""
+
+        if(div[i].find_all("img")):
+
+            img_div=div[i].find_all("img")
+            if(div[i+1].find_all("p")):
+                for x in range(len(div[i+1].find_all("p"))):
+                    x1=div[i+1].find_all("p")
+                    data=data+str(x1[x].string)+" "
+                    if(div[i+2].find_all("p")):
+                        for x_1 in range(len(div[i+2].find_all("p"))):
+                            x4=div[i+2].find_all("p")
+                            data=data+str(x4[x_1].string)+" "
+
+            elif(div[i+1].find_all(["h1", "h2", "h3", "h4" ,"h5", "h6"])):
+                for x in range(len(div[i+1].find_all(["h1", "h2", "h3", "h4" ,"h5", "h6"]))):
+                    x2=div[i+1].find_all(["h1", "h2", "h3", "h4" ,"h5", "h6"])
+                    data=data+str(x2[x].string)+" "
+                    if(div[i+2].find_all("p")):
+                        for x_2 in range(len(div[i+2].find_all("p"))):
+                            x5=div[i+2].find_all("p")
+                            data=data+str(x5[x_2].string)+" "
+
+            elif(div[i+1].find_all(["h1", "h2", "h3", "h4" ,"h5", "h6"])):
+                for x in range(len(div[i+1].find_all(["h1", "h2", "h3", "h4" ,"h5", "h6"]))):
+                    x3=div[i+1].find_all(["h1", "h2", "h3", "h4" ,"h5", "h6"])
+                    data=data+str(x3[x].string)+" "
+                    if(div[i+2].find_all(["h1", "h2", "h3", "h4" ,"h5", "h6"])):
+                        for x_3 in range(len(div[i+2].find_all(["h1", "h2", "h3", "h4" ,"h5", "h6"]))):
+                            x6=div[i+2].find_all(["h1", "h2", "h3", "h4" ,"h5", "h6"])
+                            data=data+str(x6[x_3].string)+" "
+
+            elif(div[i+1].find_all("span")):
+                for x in range(len(div[i+1].find_all("span"))):
+                    x7=div[i+1].find_all("span")
+                    data=data+str(x7[x].string)+" "
+                    if(div[i+2].find_all("li")):
+                        for x_8 in range(len(div[i+2].find_all("li"))):
+                            x9=div[i+2].find_all("li")
+                            data=data+str(x9[x_8].string)+" "
+
+
+            field1.append(data)
+            country_field.append(country_list1[count_1])
+    count_1+=1
+
+        
+#removing field element having charachter length more than 500
+new_field=[]
+for i in field:
+    if(len(i)<500):
+        new_field.append(i)
+for i in new_field:
+    field.append(i)
+    print(i)
+
+#checking if any word is related to living beings
+
+from nltk.corpus import wordnet
+a=[]
+index=[]
+from nltk.tokenize import word_tokenize
+
+def living(x):
+    j2=word_tokenize(x)
+    for j1 in j2:
+        for i in range(len(wordnet.synsets(j1))):
+            syn=wordnet.synsets(j1)[i]
+            a.append(syn.hypernym_paths())
+        print(a)
+        for i in a:
+            for j in i:
+                for k in j:
+                    k=str(k)
+                    if(k=="Synset('living_thing.n.01')"):
+                        a.clear()
+                        return 1
+        
+        
+
+
+count=0
+for i in field:
+    x=living(i)
+    print(x)
+    if(x==1):
+        co=0
+    else:
+        print("k")
+        index.append(count)
+    count+=1
+
+#fianl filtering
+
+temp=list(field)
+temp=field[:]
+temp1=list(country_field)
+temp1=country_field[:]
+for x in range(len(field)):
+    for y in index:
+        if(x!=y):
+            field.append(temp[x])
+            country_field.append(temp1[x])
+
+#extracting job
+a=[]
+job=[]
+data=""
+from nltk.tokenize import word_tokenize
+
+def job_name(x1):    
+    a.clear()
+    j2=word_tokenize(x1)
+    for j1 in j2:
+        data=""
+        for x in range(len(wordnet.synsets(j1))):
+            syn=wordnet.synsets(j1)[x]
+            a.append(syn.hypernym_paths())
+            for i in a:
+                for j in i:
+                    for k in j:
+                        print(k)
+                        k=str(k)
+                        if(k=="Synset('abstraction.n.06')"):
+                            data+=j1
+                            print(j1)
+                            count=1
+                            return j1
+                        elif(k=="Synset('causal_agent.n.01')"):
+                            data+=j1
+                            print(j1)
+                            count=1
+                            return j1
+                        elif(k=="Synset('person.n.01')"):
+                            data+=j1
+                            print(j1)
+                            return j1
+                            count=1
+                if(count==1):
+                    break
+
+            if(count==1):
+                break
+            
+        
+for g in field:
+    job.append(job_name(g))
+
+#CHALLENGE 3 (partially complete)
+#making csv file
+
+if(len(country)==len(field)):
+    pd.DataFrame({'description': field, 'country': country_field, 'job': job}).to_csv('data.csv', index=False)

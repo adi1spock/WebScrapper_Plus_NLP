@@ -1,0 +1,21 @@
+# thapar_wings_2020 <br />
+***college-- Thapar Univ(TIET) <br />
+ team name-bloody bunny  <br />
+ team member- ADITYA SINGH <br />
+video url of project->   https://youtu.be/syUT0btPHto <br />
+_________sorry i tried to keep it short <br />
+_________my mail- adityasingh141141@gmail.com*** <br />
+# description
+***-.nltk has been used for nlp <br />
+ -.open design file in draw.io website online <br />
+ -.main file contain all code together pls do not stop the webdriver in middle of a process as there are many for loops and many times lists are cleared so it will give dubious result pls amin file has more modification to it <br />
+ -.pls wait till all the process ends <br /> <br /> <br />
+ #if u want to check the code part by part(u can do it for faster checking the basic principles) --> <br /> <br /> <br />
+ -.list file contain seperate code to check how it will retrive data <br />
+ -.table file contain seperate code to check how it will retrive data as it scrape rows and bring together all the columns <br />
+ -.text_img file contain seperate code to check how it will retrive data with sites having images as well as text <br />
+ -.and deep recursion file contain the code for recursively iterarting over the links <br />
+ -.code snippets contain some code of nltk and code for webdriver <br />
+ -.open thapar11 file online on draw.io website to see flow chart <br />
+ -.most of the codes are in .ipynb(jyupter notebook) and one code in .txt  this contain all the code in .txt format<br />
+ -.if you have any problem using selenium here is online tut for adding it to path variable after that it will be all good   ---  https://youtu.be/Xjv1sY630Uc <br />***
