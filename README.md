@@ -32,6 +32,8 @@ evident in your designs/code and video.
 
 ## diagrams
 Code flow.
+
+
 ![alt](https://github.com/adi1spock/WebScrapper_Plus_NLP/blob/master/image-000.png)
 ![alt](https://github.com/adi1spock/WebScrapper_Plus_NLP/blob/master/image-001.png)
 ![alt](https://github.com/adi1spock/WebScrapper_Plus_NLP/blob/master/image-002.png)
