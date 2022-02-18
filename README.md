@@ -32,9 +32,9 @@ evident in your designs/code and video.
 
 ## diagrams
 Code flow.
-(image-000.png)
-(image-001.png)
-(image-002.png)
+(https://github.com/adi1spock/WebScrapper_Plus_NLP/blob/master/image-000.png)
+(https://github.com/adi1spock/WebScrapper_Plus_NLP/blob/master/image-001.png)
+(https://github.com/adi1spock/WebScrapper_Plus_NLP/blob/master/image-002.png)
 ## video link
 [Detailed video link about the program.](https://youtu.be/syUT0btPHto)
 
