@@ -28,7 +28,7 @@ english version of the govt. website( in the scope of this problem, the countrie
 considered, have the english version available).
 One additional important aspect- even within a country, the government pages may have different
 HTML structures. Ensure you have a solution for the core part of the problem, which should be
-evident in your designs/code and video.
+evident in your designs/code and video.![alt](https://github.com/adi1spock/WebScrapper_Plus_NLP/blob/master/thapar_wings.gif)
 
 ## diagrams
 Code flow.
