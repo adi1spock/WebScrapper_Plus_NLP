@@ -1,5 +1,5 @@
 # WebScrapper_Plus_NLP
-## IntelleWings Hackathon Thapar 2020 2nd runner up.
+## IntelleWings Hackathon Thapar 2020.
 web scraper that uses natural language processing to extract useful info from all deep links
 ## table of content
 * [info](#info)
