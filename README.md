@@ -31,7 +31,10 @@ HTML structures. Ensure you have a solution for the core part of the problem, wh
 evident in your designs/code and video.
 
 ## diagrams
-
+Code flow.
+(image-000.png)
+(image-001.png)
+(image-002.png)
 ## video link
 [Detailed video link about the program.](https://youtu.be/syUT0btPHto)
 
